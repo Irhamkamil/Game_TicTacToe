@@ -9,13 +9,8 @@ function Square({ value, onSquareClick }) {
     </button>
   );
 }
-
-export default function Board() {
-  // membuat state squares dan xIsNext
-  // membuat array squares yang berisi 9 dan diisi dengan null
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState(true);
-
+// untuk memanggil props, harus menggunakan {}
+function Board({ xIsNext, squares, onPlay }) {
   function handleClick(i) {
     // jika kotak sudah terisi atau udah ada yang menang
     if (squares[i] || calculateWinner(squares)) return;
@@ -23,10 +18,8 @@ export default function Board() {
     const nextSquares = squares.slice();
     // jika xIsNext true, maka nextSquares[i] = "X", jika false, maka nextSquares[i] = "O"
     nextSquares[i] = xIsNext ? "X" : "O";
-    // melanjutkan giliran ke kotak berikutnya
-    setSquares(nextSquares);
-    // Mengubah giliran sekarang
-    setXIsNext(!xIsNext);
+
+    onPlay(nextSquares);
   }
 
   const winner = calculateWinner(squares);
@@ -52,6 +45,54 @@ export default function Board() {
         <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
       </div>
     </>
+  );
+}
+
+export default function Game() {
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setcurrentMove] = useState(0);
+  const xIsNext = currentMove % 2 === 0;
+  // keadaan terakhir dari gamenya
+  const currentSquares = history[currentMove];
+
+  function jumpto(nextMove) {
+    setcurrentMove(nextMove);
+  }
+
+  function handlePlay(nextSquares) {
+    // agar bisa mengetahui keadaan terbaru
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    // untuk mengatur history ke keadaan terakhir
+    setcurrentMove(nextHistory.length - 1);
+    // untuk menganti pemain dari X ke O
+  }
+
+  // ini untuk mengubah menjadi tombol
+  const moves = history.map((squares, move) => {
+    let description = "";
+    if (move > 0) {
+      description = "Go to Move" + move;
+    } else {
+      description = "Go to game Start";
+    }
+
+    return (
+      <li key={move}>
+        <button onClick={() => jumpto(move)}>{description}</button>
+      </li>
+    );
+  });
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+      </div>
+      <div className="game-info">
+        <ol>{moves}</ol>
+      </div>
+    </div>
   );
 }
 
